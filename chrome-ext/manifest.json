@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "TCC Tradutor",
+  "version": "1.0",
+  "description": "Extensão para tradução de palavras",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "commands",
+    "contextMenus",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["style.css"],
+      "js": ["pageContent.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "commands": {
+    "ativar_caixa_traducao": {
+      "suggested_key": {
+        "default": "Ctrl+Y",
+        "mac": "Command+Y"
+      },
+      "description": "Ativar caixa de tradução"
+    }
+  }
+}
