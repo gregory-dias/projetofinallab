@@ -8,10 +8,12 @@
     "storage",
     "commands",
     "contextMenus",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
-    "http://localhost:8000/*"
+    "http://localhost:8000/*",
+    "http://127.0.0.1:8000/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -20,15 +22,20 @@
     {
       "matches": ["<all_urls>"],
       "css": ["style.css"],
-      "js": ["pageContent.js"],
+      "js": [
+        "src/api.js",
+        "src/cache.js",
+        "src/highlighter.js",
+        "src/content.js"
+      ],
       "run_at": "document_end"
     }
   ],
   "commands": {
     "ativar_caixa_traducao": {
       "suggested_key": {
-        "default": "Ctrl+Y",
-        "mac": "Command+Y"
+        "default": "Alt+Shift+Y",
+        "mac": "Alt+Shift+Y"
       },
       "description": "Ativar caixa de tradução"
     }
