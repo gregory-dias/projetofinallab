@@ -1,3 +1,8 @@
+# =========================================================
+# Backend FastAPI
+# Responsável por: receber, salvar, listar, atualizar e excluir traduções no MongoDB
+# =========================================================
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel 
 from pymongo import MongoClient
@@ -5,8 +10,15 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 from bson.objectid import ObjectId
 
+# =========================================================
+# INSTÂNCIA PRINCIPAL DA APLICAÇÃO FASTAPI
+# =========================================================
 app = FastAPI()
 
+# =========================================================
+# CONFIGURAÇÃO DE CORS
+# Permite que a extensão (em páginas web) consiga chamar a API mesmo vindo de domínios diferentes (localhost, sites de notícia, etc).
+# =========================================================
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # permite que qualquer dominio acesse a api
@@ -15,7 +27,10 @@ app.add_middleware(
     allow_headers=["*"], # permite todos os headers, os tipos de cabeçalhos que podem ser enviados
 )
 
-# Conexão com MongoDB
+# =========================================================
+# CONEXÃO COM MONGODB
+# Cria o client, seleciona o banco e a coleção usada para armazenar as traduções do usuário.
+# =========================================================
 try:
     # client = MongoClient("mongodb://localhost:27017/")
     # client = MongoClient("mongodb+srv://gregory_db_user:PjkXT334F5LYsiin@labprojfinal.uxbpfeq.mongodb.net/?retryWrites=true&w=majority&appName=tcc")
@@ -26,6 +41,10 @@ try:
 except Exception as e:
     logging.error(f"Erro ao conectar no MongoDB: {e}")
 
+# =========================================================
+# MODELOS DE REQUISIÇÃO (Pydantic)
+# Definem o formato dos dados esperados no corpo das requisições.
+# =========================================================
 class TraducaoRequest(BaseModel):
     original: str
     traduzido: str
@@ -34,6 +53,9 @@ class TraducaoUpdateRequest(BaseModel):
     original: str | None = None
     traduzido: str | None = None
 
+# =========================================================
+# POST /salvar
+# =========================================================
 @app.post("/salvar")
 def salvar_traducao(request: TraducaoRequest):
     try:
@@ -47,6 +69,9 @@ def salvar_traducao(request: TraducaoRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao salvar tradução: {e}")
 
+# =========================================================
+# GET /traduzidas/{id_usuario}
+# =========================================================
 @app.get("/traduzidas/{id_usuario}")
 def buscar_traducoes_por_usuario(id_usuario: str):
     try:
@@ -56,6 +81,9 @@ def buscar_traducoes_por_usuario(id_usuario: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao buscar traduções: {e}")
 
+# =========================================================
+# PUT /traducao/{id_traducao}
+# =========================================================
 @app.put("/traducao/{id_traducao}")
 def atualizar_traducao(id_traducao: str, request: TraducaoUpdateRequest):
     try:
@@ -87,6 +115,9 @@ def atualizar_traducao(id_traducao: str, request: TraducaoUpdateRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao atualizar tradução: {e}")
 
+# =========================================================
+# DELETE /traducao/{id_traducao}
+# =========================================================
 @app.delete("/traducao/{id_traducao}")
 def deletar_traducao(id_traducao: str):
     try:

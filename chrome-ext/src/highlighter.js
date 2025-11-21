@@ -1,11 +1,29 @@
+// =========================================================
+// Lógica para grifar palavras na página
+// - Montar a regex com as palavras salvas
+// - Percorrer o DOM e envolver matches em <span.tcc-highlight>
+// - Observar mudanças no DOM (MutationObserver) para grifar conteúdo carregado depois (scroll, lazy-load, etc)
+// - Limpar e recriar os destaques quando necessário
+// =========================================================
+
 window.TCC = window.TCC || {};
 
 (function () {
+  // -------------------------------------------------------
+  // CONFIGURAÇÃO INICIAL
+  // SKIP_TAGS: tags onde não queremos grifar (script, style, etc).
+  // words: lista de palavras
+  // regex: expressão regular montada com as palavras
+  // observer: MutationObserver para escutar mudanças no DOM
+  // -------------------------------------------------------
   const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'IFRAME', 'CANVAS', 'AUDIO', 'VIDEO', 'OBJECT', 'EMBED', 'TEXTAREA', 'INPUT', 'CODE', 'PRE', 'SVG']);
   let words = [];
   let regex = null;
   let observer = null;
 
+  // -------------------------------------------------------
+  // FUNÇÕES UTILITÁRIAS (regex)
+  // -------------------------------------------------------
   function escapeRegExp(s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
@@ -22,16 +40,39 @@ window.TCC = window.TCC || {};
     }
   }
 
+  // -------------------------------------------------------
+  // FILTRO DE NÓS: decide se um nó de texto deve ser ignorado
+  // - tags proibidas;
+  // - já dentro de highlight;
+  // - dentro das caixas da extensão (popup/tooltip).
+  // -------------------------------------------------------
   function shouldSkip(node) {
     if (!node || !node.parentNode) return true;
+
     const parent = node.parentNode;
+
     // não processa dentro de tags proibidas
     if (SKIP_TAGS.has(parent.nodeName)) return true;
-    // não reprocessa dentro de highlights
+
+    // não reprocessa dentro de outros highlights
     if (parent.closest && parent.closest('.tcc-highlight')) return true;
+
+    // não grifa dentro das caixas de tradução
+    if (
+      parent.closest &&
+      parent.closest('.tcc-translate-tooltip, .tcc-translate-popup')
+    ) {
+      return true;
+    }
+
     return false;
   }
 
+  // -------------------------------------------------------
+  // FUNÇÃO PRINCIPAL PARA DESTACAR UM NÓ DE TEXTO
+  // - Envolve cada match da regex em <span class="tcc-highlight">
+  //   e guarda a palavra original no dataset (data-tcc-word).
+  // -------------------------------------------------------
   function highlightTextNode(textNode) {
     const text = textNode.nodeValue;
     if (!text || !regex) return;
@@ -71,6 +112,12 @@ window.TCC = window.TCC || {};
     textNode.replaceWith(frag);
   }
 
+  // -------------------------------------------------------
+  // PERCORRE A ÁRVORE A PARTIR DE UM ROOT E DESTACA TEXTOS
+  // Usado:
+  // - na inicialização (root = document.body)
+  // - quando novos elementos são adicionados ao DOM.
+  // -------------------------------------------------------
   function walkAndHighlight(root) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode: (node) => {
@@ -92,6 +139,10 @@ window.TCC = window.TCC || {};
     }
   }
 
+  // -------------------------------------------------------
+  // MUTATION OBSERVER
+  // Observa novos nós adicionados ao DOM e aplica highlight.
+  // -------------------------------------------------------
   function onMutations(mutations) {
     for (const m of mutations) {
       for (const added of m.addedNodes) {
@@ -115,6 +166,12 @@ window.TCC = window.TCC || {};
     observer = null;
   }
 
+  // -------------------------------------------------------
+  // FUNÇÕES PARA LIMPAR E REINICIALIZAR OS HIGHLIGHTS
+  // clearHighlights: remove spans de highlight
+  // initHighlight: inicializa regex + aplica nos conteúdos
+  // refresh: limpa tudo e recria com nova lista de palavras
+  // -------------------------------------------------------
   function clearHighlights() {
     // volta spans para texto puro (simples: substitui cada span por texto interno)
     const spans = document.querySelectorAll('span.tcc-highlight');
@@ -130,7 +187,7 @@ window.TCC = window.TCC || {};
 
     // 1) grifa o conteúdo atual
     walkAndHighlight(document.body);
-    
+
     // 2) observa novos nós adicionados (scroll/lazy load)
     startObserver();
   }
@@ -141,6 +198,9 @@ window.TCC = window.TCC || {};
     initHighlight(wordList);
   }
 
+  // -------------------------------------------------------
+  // Exporta as funções na namespace: window.TCC.highlighter
+  // -------------------------------------------------------
   window.TCC.highlighter = {
     initHighlight,
     refresh,

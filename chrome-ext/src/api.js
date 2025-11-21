@@ -1,9 +1,22 @@
+// =========================================================
+// Camada de acesso à API backend (FastAPI)
+// - salvarTraducao
+// - buscarTraducoes
+// - atualizarTraducao
+// - excluirTraducao
+// =========================================================
+
 window.TCC = window.TCC || {};
 
 (function () {
+  // =======================================================
+  // URL da API
+  // =======================================================
   const BASE_URL = 'http://127.0.0.1:8000';
 
-  // CREATE
+  // =======================================================
+  // POST /salvar
+  // =======================================================
   async function salvarTraducao(textoOriginal, textoTraduzido) {
     const response = await fetch(`${BASE_URL}/salvar`, {
       method: 'POST',
@@ -14,7 +27,9 @@ window.TCC = window.TCC || {};
     return response.json();
   }
 
-  // GET
+  // =======================================================
+  // GET /traduzidas/usuario123
+  // =======================================================
   async function buscarTraducoes() {
     const response = await fetch(`${BASE_URL}/traduzidas/usuario123`);
     if (!response.ok) throw new Error('Erro ao buscar traduções');
@@ -27,7 +42,9 @@ window.TCC = window.TCC || {};
     }));
   }
 
-  // UPDATE
+  // =======================================================
+  // PUT /traducao/{id}
+  // =======================================================
   async function atualizarTraducao(idTraducao, novoOriginal, novoTraduzido) {
     const payload = {};
     if (typeof novoOriginal !== 'undefined') payload.original = novoOriginal;
@@ -42,13 +59,18 @@ window.TCC = window.TCC || {};
     return response.json();
   }
 
-  // DELETE
+  // =======================================================
+  // DELETE /traducao/{id}
+  // =======================================================
   async function excluirTraducao(idTraducao) {
     const response = await fetch(`${BASE_URL}/traducao/${idTraducao}`, { method: 'DELETE' });
     if (!response.ok) throw new Error(`Erro ao excluir tradução: ${await response.text()}`);
     return response.json();
   }
 
+  // =======================================================
+  // Exporta as funções na namespace: window.TCC.api
+  // =======================================================
   window.TCC.api = {
     salvarTraducao,
     buscarTraducoes,
